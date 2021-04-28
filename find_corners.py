@@ -34,7 +34,7 @@ for filename in os.listdir(directory):
             continue
         break
 
-    for i in range(len(img[0])):
+    for i in range(min([len(line[0]) for line in img])):
         for j in range(len(img)):
             if not img[j][-i].any():
                 right = j, len(img[i]) - i
@@ -43,8 +43,8 @@ for filename in os.listdir(directory):
             continue
         break
 
-    f.write(filename + ' ' + str(bottom[0] - top[0]) + ' ' + str(right[1] - left[1]) + '\n')
-    # format: "<filename> <height> <width>"
+    f.write(filename + ': (' + str(bottom[0] - top[0]) + ', ' + str(right[1] - left[1]) + ')\n')
+    # format: "<filename>: (<height>, <width>)"
     print filename + ' ' + str(bottom[0] - top[0]) + ' ' + str(right[1] - left[1])
 
 
