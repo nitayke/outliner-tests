@@ -43,7 +43,9 @@ for filename in os.listdir(directory):
             continue
         break
 
-    f.write(str(top) + str(bottom) + str(right) + str(left) + '\n')
-    print top, bottom, right, left, filename
+    f.write(filename + ' ' + str(bottom[0] - top[0]) + ' ' + str(right[1] - left[1]) + '\n')
+    # format: "<filename> <height> <width>"
+    print filename + ' ' + str(bottom[0] - top[0]) + ' ' + str(right[1] - left[1])
+
 
 f.close()
