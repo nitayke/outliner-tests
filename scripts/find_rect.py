@@ -2,11 +2,11 @@
 
 import json
 import cv2
+from math import radians
 import os
 import numpy as np
 
 directory = "../final/"
-f = open('../rectangles.json', 'w+')
 d = {}
 for filename in os.listdir(directory):
     l_img = cv2.imread(directory + filename)
@@ -24,9 +24,10 @@ for filename in os.listdir(directory):
     cv2.drawContours(im, cnts, 0, (0,255,0), 3)
 
     ((x, y), (width, height), angle) = cv2.minAreaRect(cnts[0])
-    (x, y, width, height, angle) = (round(x, 2), round(y, 2), round(width, 2), round(height, 2), round(angle, 2))
+    (x, y, width, height, angle) = (round(x, 2), round(y, 2), round(width, 2), round(height, 2), round(radians(angle), 2))
     d[filename] = {'x': x, 'y': y, 'width': width, 'height': height, 'angle': angle}
     print(filename)
 
+f = open('../rectangles.json', 'w')
 f.write(json.dumps(d, indent=3))
 f.close()
