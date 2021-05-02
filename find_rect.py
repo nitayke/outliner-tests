@@ -11,11 +11,15 @@ for filename in os.listdir(directory):
 
     cnts = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-    print len(cnts)
     im = np.zeros((250, 250, 3), np.uint8) # blank image
-    cv2.drawContours(im, cnts, -1, (0,255,0), 3)
+    if len(cnts) > 1:
+        tmp = cnts[0]
+        for i in cnts[1:]:
+            tmp = np.append(tmp, i, axis=0)
+        cnts = [tmp]
+    cv2.drawContours(im, cnts, 0, (0,255,0), 3)
 
-    ((x, y), (width, height), angle) = cv2.minAreaRect(cnts)
+    ((x, y), (width, height), angle) = cv2.minAreaRect(cnts[0])
     (x, y, width, height, angle) = (round(x, 2), round(y, 2), round(width, 2), round(height, 2), round(angle, 2))
     d = {'x': x, 'y': y, 'width': width, 'height': height, 'angle': angle}
     f.write(filename + ': ' + str(d) + '\n')
@@ -27,7 +31,7 @@ for filename in os.listdir(directory):
 
     numpy_horizontal = np.hstack((im, l_img))
     numpy_horizontal_concat = np.concatenate((im, l_img), axis=1)
-    cv2.imshow(filename, numpy_horizontal_concat)
-    cv2.waitKey()
+    # cv2.imshow(filename, numpy_horizontal_concat)
+    # cv2.waitKey()
 
 f.close()
