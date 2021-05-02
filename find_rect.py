@@ -24,14 +24,5 @@ for filename in os.listdir(directory):
     d = {'x': x, 'y': y, 'width': width, 'height': height, 'angle': angle}
     f.write(filename + ': ' + str(d) + '\n')
     print filename
-    box = np.int0(cv2.boxPoints(((x, y), (width, height), angle) ))
-    cv2.drawContours(l_img, [box], 0, (36,255,12), 3)
-    # cv2.imshow('image ' + filename, l_img)
-    # cv2.waitKey()
-
-    numpy_horizontal = np.hstack((im, l_img))
-    numpy_horizontal_concat = np.concatenate((im, l_img), axis=1)
-    # cv2.imshow(filename, numpy_horizontal_concat)
-    # cv2.waitKey()
 
 f.close()
