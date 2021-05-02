@@ -26,6 +26,6 @@ for filename in os.listdir(directory):
     (x, y, width, height, angle) = (round(x, 2), round(y, 2), round(width, 2), round(height, 2), round(angle, 2))
     d = {filename: {'x': x, 'y': y, 'width': width, 'height': height, 'angle': angle}}
     f.write(json.dumps(d, indent=4) + "\n")
-    print filename
+    print(filename)
 
 f.close()

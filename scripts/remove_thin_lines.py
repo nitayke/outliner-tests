@@ -12,5 +12,5 @@ for filename in os.listdir("../original"):
     opening = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
 
     cv2.imwrite('../removed_thin_lines/' + str(i) + '.jpg', opening)
-    print i
+    print(i)
     i += 1

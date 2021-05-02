@@ -46,4 +46,4 @@ for filename in os.listdir(directory):
     l_img[y_offset:y_offset+height, x_offset:x_offset+width] = s_img
     
     cv2.imwrite('../final/' + filename, l_img)
-    print filename
+    print(filename)
