@@ -19,14 +19,14 @@ def callback(data):
         return
 
     filename = data.header.frame_id
-    rect = [j[filename]['x']/10, j[filename]['y']/10, j[filename]['width']/10, j[filename]['height']/10, j[filename]['angle']]
+    gt = [j[filename]['x']/10, j[filename]['y']/10, j[filename]['width']/10, j[filename]['height']/10, j[filename]['angle']]
     result = [data.rectangle.centerX, data.rectangle.centerY, data.rectangle.width, data.rectangle.height, data.rectangle.theta]
 
-    if abs(abs(rect[4] - result[4]) - pi/2) < 0.1: # 90 degrees rotated
-        rect[2], rect[3] = rect[3], rect[2]
+    if abs(abs(gt[4] - result[4]) - pi/2) < 0.1: # 90 degrees rotated
+        gt[2], gt[3] = gt[3], gt[2]
 
     try:
-        single_errors = [round(abs(result[i] - rect[i]), 3) for i in range(5)]
+        single_errors = [round(gt[i] - result[i], 3) for i in range(5)]
         errors.append(single_errors)
     except ZeroDivisionError:
         pass
