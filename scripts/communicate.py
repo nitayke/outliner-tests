@@ -10,6 +10,7 @@ import json
 from math import pi
 
 errors = []
+fields = ['x', 'y', 'width', 'height', 'angle']
 
 def callback(data):
     global j
@@ -19,18 +20,17 @@ def callback(data):
 
     filename = data.header.frame_id
     rect = [j[filename]['x']/10, j[filename]['y']/10, j[filename]['width']/10, j[filename]['height']/10, j[filename]['angle']]
-    
     result = [data.rectangle.centerX, data.rectangle.centerY, data.rectangle.width, data.rectangle.height, data.rectangle.theta]
 
-    if abs(abs(rect[4] - result[4]) - pi/2) < 0.1:
+    if abs(abs(rect[4] - result[4]) - pi/2) < 0.1: # 90 degrees rotated
         rect[2], rect[3] = rect[3], rect[2]
-    
+
     try:
-        single_errors = [100 * abs(1 - (result[i] / rect[i])) for i in range(4)] + [100/360*abs(result[4] / rect[4])]
-        single_errors = [round(i, 3) for i in single_errors]
+        single_errors = [round(abs(result[i] - rect[i]), 3) for i in range(5)]
         errors.append(single_errors)
     except ZeroDivisionError:
         pass
+
 
 rospy.init_node('test_img')
 
@@ -63,4 +63,14 @@ for filename in j.keys():
 
 # rospy.spin()
 
-print(errors[:50])
+print('------ Average error: ----------')
+for i in range(4):
+    print(fields[i], ':', round(sum([j[i] for j in errors])/510, 3), '[m]')
+print('angle:', round(sum([i[4] for i in errors])/510, 3), '[°]')
+
+print('------ Standard Deviation: -----')
+std = np.std(errors, axis=0).tolist()
+std = [round(i, 3) for i in std]
+for i in range(4):
+    print(fields[i], ':', std[i], '[m]')
+print(fields[4], ':', std[4], '[°]')
