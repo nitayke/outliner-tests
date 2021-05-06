@@ -32,20 +32,21 @@ for filename_int in range(1, FILES_COUNT + 1):
     l_img = np.zeros((IMAGE_SIZE, IMAGE_SIZE, 3), np.uint8) # blank image
     l_img.fill(255)
     angle = randint(0, 90)
+
+    side_h, side_w, _ = s_img.shape
     s_img = rotate_image(s_img, angle)
     height, width, _ = s_img.shape
+
     while width > MAX_BUILDING_SIZE or height > MAX_BUILDING_SIZE:
         height, width = int(height/2), int(width/2)
         s_img = cv2.resize(s_img, (width, height), interpolation=cv2.INTER_AREA)
-        # angle = randint(0, 90)
-        # s_img = rotate_image(s_img, angle)
     while width < MIN_BUILDING_SIZE or height < MIN_BUILDING_SIZE:
         height, width = height*2, width*2
         s_img = cv2.resize(s_img, (width, height), interpolation=cv2.INTER_AREA)
-        # angle = randint(0, 90)
-        # s_img = rotate_image(s_img, angle)
 
-    x_offset = randint(0, (IMAGE_SIZE-width))
+    height, width, _ = s_img.shape
+
+    x_offset = randint(0, IMAGE_SIZE-width)
     y_offset = randint(0, IMAGE_SIZE-height)
     l_img[y_offset:y_offset+height, x_offset:x_offset+width] = s_img
     
