@@ -5,11 +5,11 @@ from constants import *
 
 i = 1
 
-for filename in os.listdir("../original"):
-    img = cv2.imread('../original/' + filename)
+for filename in os.listdir("../1_original"):
+    img = cv2.imread('../1_original/' + filename)
     kernel = np.ones((5,5),np.uint8)
     opening = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
 
-    cv2.imwrite('../removed_thin_lines/' + str(i) + '.jpg', opening)
+    cv2.imwrite('../2_removed_thin_lines/' + str(i) + '.jpg', opening)
     print(i)
     i += 1

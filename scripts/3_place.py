@@ -24,7 +24,7 @@ def rotate_image(image, angleInDegrees):
     outImg = cv2.warpAffine(image, rot, (b_w, b_h), flags=cv2.INTER_LINEAR, borderValue=(255,255,255))
     return outImg
 
-directory = "../after_resize/"
+directory = "../3_after_resize/"
 
 for filename_int in range(1, FILES_COUNT + 1):
     filename = str(filename_int) + '.jpg'
@@ -49,5 +49,5 @@ for filename_int in range(1, FILES_COUNT + 1):
     y_offset = randint(0, IMAGE_SIZE-height)
     l_img[y_offset:y_offset+height, x_offset:x_offset+width] = s_img
     
-    cv2.imwrite('../final/' + filename, l_img)
+    cv2.imwrite('../4_final/' + filename, l_img)
     print(filename)
