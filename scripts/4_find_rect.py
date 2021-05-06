@@ -35,7 +35,7 @@ for filename_int in range(1, FILES_COUNT + 1):
     # box = np.int0(box)
     # cv2.drawContours(l_img, [box], 0, (0, 0, 255), 3)
 
-    # cv2.imwrite('../5_final_with_rects/' + filename, l_img)
+    # cv2.imwrite('../final_with_rects/' + filename, l_img)
     
 
 f = open('../gt.json', 'w')

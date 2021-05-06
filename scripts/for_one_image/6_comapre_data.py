@@ -46,7 +46,7 @@ for filename, error in errors.items():
 
             hori = np.concatenate((im1, im2), axis=1)
 
-            cv2.imwrite('../../6_debugging/' + filename + '.jpg', hori)
+            cv2.imwrite('./big_errors/' + filename + '.jpg', hori)
             break
 
 print('------ Average error: ----------')
