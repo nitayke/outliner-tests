@@ -41,15 +41,15 @@ for filename_int in range(1, FILES_COUNT + 1):
         l_img.fill(255)
 
         angle = randint(0, 90)
-        side_h, side_w = s_img.shape
+        side_h, side_w, _ = s_img.shape
         rotated = rotate_image(s_img, angle)
         height, width, _ = rotated.shape
         if height < IMAGE_SIZE and width < IMAGE_SIZE:
             break
 
-        x_offset = randint(0, IMAGE_SIZE-width)
-        y_offset = randint(0, IMAGE_SIZE-height)
-        l_img[y_offset:y_offset+height, x_offset:x_offset+width] = rotated
+    x_offset = randint(0, IMAGE_SIZE-width)
+    y_offset = randint(0, IMAGE_SIZE-height)
+    l_img[y_offset:y_offset+height, x_offset:x_offset+width] = rotated
     
     cv2.imwrite('../4_final/' + filename, l_img)
     print(filename, (height, width))
