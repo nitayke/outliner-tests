@@ -6,6 +6,8 @@ import cv2
 import numpy as np
 import json
 from math import pi
+import sys
+sys.path.insert(0, "..")
 from constants import *
 
 errors = {} # {<filename>: [[<e_x>, <e_y>, <e_width>, <e_height>, <e_angle>], data]}
@@ -35,7 +37,7 @@ pub = rospy.Publisher('map_handler/out/debug_map', OccupancyGrid, queue_size=100
 sub = rospy.Subscriber('map_roi/out/rectangle/center_size_rot', RectangleStamped, callback, queue_size=100)
 rospy.sleep(1.)
 
-file = open('../gt.json')
+file = open('../../gt.json')
 txt = file.read()
 j = json.loads(txt)
 file.close()
@@ -43,7 +45,7 @@ file.close()
 filename = '331.jpg'
 
 for i in range(10):
-    img = cv2.imread('../4_final/' + filename)
+    img = cv2.imread('../../4_final/' + filename)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     m = MapMetaData()
     m.resolution = 0.1
@@ -60,9 +62,8 @@ for i in range(10):
 
     pub.publish(ogrid)
 
-# add a flag to finish it
-# rospy.spin()
+rospy.spin()
 
-file = open('../results1.json', 'w')
+file = open('./results_for_one.json', 'w')
 file.write(json.dumps(errors, indent=3))
 file.close()

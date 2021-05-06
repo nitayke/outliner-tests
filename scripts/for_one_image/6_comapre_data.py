@@ -2,15 +2,17 @@ import json
 import cv2
 import numpy as np
 from math import degrees
+import sys
+sys.path.insert(0, "..")
 from constants import *
 
 count = 0
 
-file = open('../results1.json', 'r')
+file = open('./results_for_one.json', 'r')
 errors = json.loads(file.read())
 file.close()
 
-file = open('../gt.json', 'r')
+file = open('../../gt.json', 'r')
 gt_dict = json.loads(file.read())
 file.close()
 
@@ -23,11 +25,11 @@ for filename, error in errors.items():
         if abs(error[0][i]) > 2*std[i]:
             count += 1
 
-            im1 = cv2.imread('../templates/gt.jpg')
-            im2 = cv2.imread('../templates/result.jpg')
+            im1 = cv2.imread('../../templates/gt.jpg')
+            im2 = cv2.imread('../../templates/result.jpg')
 
-            transparent1 = cv2.imread('../4_final/' + filename1)
-            transparent2 = cv2.imread('../4_final/' + filename1)
+            transparent1 = cv2.imread('../../4_final/' + filename1)
+            transparent2 = cv2.imread('../../4_final/' + filename1)
 
             gt = list(gt_dict[filename1].values())
 
@@ -44,7 +46,7 @@ for filename, error in errors.items():
 
             hori = np.concatenate((im1, im2), axis=1)
 
-            cv2.imwrite('../6_debugging/' + filename + '.jpg', hori)
+            cv2.imwrite('../../6_debugging/' + filename + '.jpg', hori)
             break
 
 print('------ Average error: ----------')
