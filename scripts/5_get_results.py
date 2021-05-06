@@ -23,16 +23,10 @@ def callback(data):
         gt[2], gt[3] = gt[3], gt[2]
         gt[4] -= pi/2
 
-    single_errors = [abs(gt[i] - result[i]) for i in range(5)] # why not abs?
+    single_errors = [gt[i] - result[i] for i in range(5)] # why not abs?
     errors[filename] = [single_errors, result]
-    # std = np.std(errors, axis=0).tolist()
     
     print(filename)
-
-    # print(gt)
-    # print(result)
-    # print(single_errors)
-    # print()
 
 
 rospy.init_node('test_img')
@@ -41,7 +35,7 @@ pub = rospy.Publisher('map_handler/out/debug_map', OccupancyGrid, queue_size=100
 sub = rospy.Subscriber('map_roi/out/rectangle/center_size_rot', RectangleStamped, callback, queue_size=100)
 rospy.sleep(1.)
 
-file = open(GT_FILE)
+file = open('../gt.json')
 txt = file.read()
 j = json.loads(txt)
 file.close()

@@ -38,6 +38,6 @@ for filename_int in range(1, FILES_COUNT + 1):
     # cv2.imwrite('../5_final_with_rects/' + filename, l_img)
     
 
-f = open(GT_FILE, 'w')
+f = open('../gt.json', 'w')
 f.write(json.dumps(d, indent=3))
 f.close()
