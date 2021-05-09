@@ -58,7 +58,7 @@ for filename in j.keys():
     
     pub.publish(ogrid)
 
-rospy.spin()
+rospy.spin() # TODO: stop it automatically
 
 file = open('../results.json', 'w')
 file.write(json.dumps(errors, indent=3))
