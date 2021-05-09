@@ -6,10 +6,12 @@ from nav_msgs.msg import OccupancyGrid, MapMetaData
 from map_roi_aligner_msgs.msg import RectangleStamped
 from geometry_msgs.msg import Pose
 from random import randint
-from math import radians, degrees, cos, sin
+from math import radians, degrees, cos, sin, pi
 import yaml
 from constants import *
 import sys
+from time import sleep
+import glob
 
 big_images = {}
 ground_truth = {}
@@ -19,13 +21,19 @@ rospy.init_node('test_img')
 
 
 def callback(data):
-    global j
-    if "j" not in globals():
-        return
-
+    global ground_truth
+    print(ground_truth)
     filename = data.header.frame_id
-    gt = [ground_truth[filename]['x'], ground_truth[filename]['y'], ground_truth[filename]['width'],
-     ground_truth[filename]['height'], ground_truth[filename]['angle']]
+    print('Callback', filename)
+    while True:
+        try:
+            gt = [ground_truth[filename]['x'], ground_truth[filename]['y'], ground_truth[filename]['width'],
+            ground_truth[filename]['height'], ground_truth[filename]['angle']]
+            break
+        except KeyError:
+            print('key error')
+            sleep(0.5)
+
     result = [data.rectangle.centerX, data.rectangle.centerY, data.rectangle.width, data.rectangle.height, data.rectangle.theta]
 
     if -0.1 < abs(gt[4] - result[4]) - pi/2 < 0.1: # 90 degrees rotated
@@ -34,8 +42,6 @@ def callback(data):
 
     single_errors = [gt[i] - result[i] for i in range(5)]
     errors[filename] = [single_errors, result]
-    
-    print('Callback', filename)
 
 
 def rotate_image(image, angleInDegrees):
@@ -71,7 +77,7 @@ def resize_image(image):
     return cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_NEAREST)
 
 
-def find_rect(image):
+def find_rect(image, filename):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
 
@@ -113,14 +119,16 @@ def compare_results(filename, foldername):
     im1 = cv2.imread('../templates/gt.jpg')
     im2 = cv2.imread('../templates/result.jpg')
 
-    transparent1 = big_images[filename]
-    transparent2 = big_images[filename]
+    transparent1 = big_images[filename].copy()
+    transparent2 = big_images[filename].copy()
 
     gt = list(ground_truth[filename].values())
 
     box1 = cv2.boxPoints(((gt[0]*10, gt[1]*10), (gt[2]*10, gt[3]*10), degrees(gt[4])))
     box1 = np.int0(box1)
     cv2.drawContours(transparent1,[box1],0,(0x77,0x77,0xff),2)
+
+    error = errors[filename]
 
     box2 = cv2.boxPoints(((error[1][0]*10, error[1][1]*10), (error[1][2]*10, error[1][3]*10), degrees(error[1][4])))
     box2 = np.int0(box2)
@@ -135,7 +143,9 @@ def compare_results(filename, foldername):
 
 
 def get_results():
+    count = 0
     std = np.std([i[0] for i in errors.values()], axis=0).tolist()
+    std = [round(i, 3) for i in std]
 
     for filename, error in errors.items():
         print(filename)
@@ -161,10 +171,18 @@ def get_results():
     print(count)
 
 
+def delete_images(path):
+    files = glob.glob(path)
+    for f in files:
+        os.remove(f)
+
 def main():
     if len(sys.argv) != 2 or not sys.argv[1].isdigit():
         print("Usage: python3 main.py <images_count>")
         exit(0)
+
+    delete_images('../compared/*')
+    delete_images('../big_errors/*')
 
     pub = rospy.Publisher('map_handler/out/debug_map', OccupancyGrid, queue_size=100)
     sub = rospy.Subscriber('map_roi/out/rectangle/center_size_rot', RectangleStamped, callback, queue_size=100)
@@ -172,7 +190,7 @@ def main():
 
     directory = "../dataset/"
 
-    for filename_int in range(1, int(sys.argv[1])):
+    for filename_int in range(1, int(sys.argv[1]) + 1):
         filename = str(filename_int % FILES_COUNT) + '.jpg'
         s_img = cv2.imread(directory + filename)
         s_img = resize_image(s_img)
@@ -197,6 +215,8 @@ def main():
         # place in constant big image
         l_img[y_offset:y_offset+height, x_offset:x_offset+width] = rotated
         big_images[filename] = l_img
+
+        find_rect(l_img, filename)
 
         print(3)
         # publish with ROS
