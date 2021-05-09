@@ -8,7 +8,6 @@ from geometry_msgs.msg import Pose
 from random import randint
 from math import radians, degrees, cos, sin, pi
 import yaml
-from constants import *
 import sys
 from time import sleep
 import glob
@@ -16,13 +15,22 @@ import glob
 big_images = {}
 ground_truth = {}
 errors = {}
+done = False
+
+IMAGE_SIZE = 350
+FILES_COUNT = 510
+MIN_BUILDING_SIZE = 100
+MAX_BUILDING_SIZE = 300
+fields = ['x', 'y', 'width', 'height', 'angle']
+callback_count = 0
 
 rospy.init_node('test_img')
 
 
 def callback(data):
     global ground_truth
-    print(ground_truth)
+    global callback_count
+    
     filename = data.header.frame_id
     print('Callback', filename)
     while True:
@@ -31,7 +39,7 @@ def callback(data):
             ground_truth[filename]['height'], ground_truth[filename]['angle']]
             break
         except KeyError:
-            print('key error')
+            print('KeyError', filename)
             sleep(0.5)
 
     result = [data.rectangle.centerX, data.rectangle.centerY, data.rectangle.width, data.rectangle.height, data.rectangle.theta]
@@ -43,6 +51,9 @@ def callback(data):
     single_errors = [gt[i] - result[i] for i in range(5)]
     errors[filename] = [single_errors, result]
 
+    callback_count += 1
+    if callback_count >= int(sys.argv[1]):
+        done = True
 
 def rotate_image(image, angleInDegrees):
     h, w = image.shape[:2]
@@ -59,7 +70,7 @@ def rotate_image(image, angleInDegrees):
     rot[0, 2] += ((b_w / 2) - img_c[0])
     rot[1, 2] += ((b_h / 2) - img_c[1])
 
-    outImg = cv2.warpAffine(image, rot, (b_w, b_h), flags=cv2.INTER_NEAREST, borderValue=(255,255,255)) # / INTER_LINEAR
+    outImg = cv2.warpAffine(image, rot, (b_w, b_h), flags=cv2.INTER_NEAREST, borderValue=(255,255,255)) # / INTER_LINEAR ?
     return outImg
 
 
@@ -154,7 +165,7 @@ def get_results():
                 count += 1
                 compare_results(filename, '../big_errors/')
                 break
-            elif i == 0:
+            if i == 0:
                 compare_results(filename, '../compared/')
 
     print('------ Average error: ----------')
@@ -222,7 +233,9 @@ def main():
 
         print(filename)
 
-    rospy.spin() # TODO: stop it automatically
+    while not done:
+        rospy.sleep(.5)
+        print('Sleeping')
     get_results()
 
 
