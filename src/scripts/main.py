@@ -17,7 +17,9 @@ ground_truth = {}
 errors = {}
 done = False
 
-parameters = load('./config.yaml')
+
+with open('./config.yaml') as file:
+    parameters = load(file)
 
 IMAGE_SIZE = parameters['IMAGE_SIZE']
 FILES_COUNT = parameters['FILES_COUNT']
@@ -58,6 +60,7 @@ def callback(data):
     print('Callback', filename, callback_count)
     if callback_count >= int(sys.argv[1]):
         done = True
+
 
 def rotate_image(image, angleInDegrees):
     h, w = image.shape[:2]
