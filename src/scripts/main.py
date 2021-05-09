@@ -7,20 +7,23 @@ from map_roi_aligner_msgs.msg import RectangleStamped
 from geometry_msgs.msg import Pose
 from random import randint
 from math import radians, degrees, cos, sin, pi
-import yaml
 import sys
 from time import sleep
 import glob
+from yaml import load
 
 big_images = {}
 ground_truth = {}
 errors = {}
 done = False
 
-IMAGE_SIZE = 350
-FILES_COUNT = 510
-MIN_BUILDING_SIZE = 100
-MAX_BUILDING_SIZE = 300
+parameters = load('./config.yaml')
+
+IMAGE_SIZE = parameters['IMAGE_SIZE']
+FILES_COUNT = parameters['FILES_COUNT']
+MIN_BUILDING_SIZE = parameters['MIN_BUILDING_SIZE']
+MAX_BUILDING_SIZE = parameters['MAX_BUILDING_SIZE']
+
 fields = ['x', 'y', 'width', 'height', 'angle']
 callback_count = 0
 
@@ -33,7 +36,6 @@ def callback(data):
     global done
     
     filename = data.header.frame_id
-    print('Callback', filename)
     while True:
         try:
             gt = [ground_truth[filename]['x'], ground_truth[filename]['y'], ground_truth[filename]['width'],
@@ -53,6 +55,7 @@ def callback(data):
     errors[filename] = [single_errors, result]
 
     callback_count += 1
+    print('Callback', filename, callback_count)
     if callback_count >= int(sys.argv[1]):
         done = True
 
@@ -204,8 +207,8 @@ def main():
 
     directory = "../dataset/"
 
-    for filename_int in range(1, int(sys.argv[1]) + 1):
-        filename = str(filename_int % FILES_COUNT) + '.jpg'
+    for filename_int in range(int(sys.argv[1]) + 1):
+        filename = str(filename_int % FILES_COUNT + 1) + '.jpg'
         s_img = cv2.imread(directory + filename)
         s_img = resize_image(s_img)
 
@@ -236,7 +239,8 @@ def main():
         print(filename)
 
     while not done:
-        rospy.sleep(.5)
+        print("Sleeping")
+        rospy.sleep(.1)
 
     get_results()
 
