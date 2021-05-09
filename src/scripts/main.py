@@ -12,11 +12,11 @@ from time import sleep
 import glob
 from yaml import load
 
+
 big_images = {}
 ground_truth = {}
 errors = {}
 done = False
-
 
 with open('./config.yaml') as file:
     parameters = load(file)
