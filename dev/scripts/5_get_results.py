@@ -23,7 +23,7 @@ def callback(data):
         gt[2], gt[3] = gt[3], gt[2]
         gt[4] -= pi/2
 
-    single_errors = [gt[i] - result[i] for i in range(5)] # why not abs?
+    single_errors = [gt[i] - result[i] for i in range(5)]
     errors[filename] = [single_errors, result]
     
     print(filename)

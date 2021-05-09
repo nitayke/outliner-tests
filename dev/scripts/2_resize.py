@@ -44,17 +44,19 @@ for filename_int in range(1, FILES_COUNT + 1):
     height, width, _ = cropped.shape
     new_height, new_width = 0, 0
 
-    i = 0
+    # cannot resize to correct size
+    if not MIN_BUILDING_SIZE/MAX_BUILDING_SIZE < width/height < MAX_BUILDING_SIZE/MIN_BUILDING_SIZE:
+        print('bad ratio')
+        continue
 
-    # if i >= 10, the image is probably not in the correct ratio.
-    while (not 100 < new_height < 300 or not 100 < new_width < 300) and i < 10:
-        new_width = width / (randint(width//3, width) / 100)
+    if height > width:
+        new_width = randint(MIN_BUILDING_SIZE, MAX_BUILDING_SIZE * int(width/height))
         new_height = new_width * (height/width)
-
-        new_width, new_height = int(new_width), int(new_height)
-        print('Trying again:', filename, new_height, new_width)
-        new_image = cv2.resize(cropped, (new_width, new_height), interpolation=cv2.INTER_NEAREST)
-        i += 1
+    else:
+        new_height = randint(MIN_BUILDING_SIZE, MAX_BUILDING_SIZE * int(height/width))
+        new_width = new_height * (width/height)
+    new_width, new_height = int(new_width), int(new_height)
+    new_image = cv2.resize(cropped, (new_width, new_height), interpolation=cv2.INTER_NEAREST)
     
     print(filename, new_height, new_width, '\n')
 
