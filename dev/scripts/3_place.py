@@ -26,8 +26,6 @@ def rotate_image(image, angleInDegrees):
 
 directory = "../3_after_resize/"
 
-from time import sleep
-
 for filename_int in range(1, FILES_COUNT + 1):
     filename = str(filename_int) + '.jpg'
     s_img = cv2.imread(directory + filename)
