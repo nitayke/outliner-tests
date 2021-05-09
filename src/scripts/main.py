@@ -30,6 +30,7 @@ rospy.init_node('test_img')
 def callback(data):
     global ground_truth
     global callback_count
+    global done
     
     filename = data.header.frame_id
     print('Callback', filename)
@@ -161,12 +162,12 @@ def get_results():
     for filename, error in errors.items():
         print(filename)
         for i in range(5):
+            if i == 0:
+                compare_results(filename, '../compared/')
             if abs(error[0][i]) > 2*std[i]:
                 count += 1
                 compare_results(filename, '../big_errors/')
                 break
-            if i == 0:
-                compare_results(filename, '../compared/')
 
     print('------ Average error: ----------')
     for i in range(4):
@@ -190,6 +191,7 @@ def delete_images(path):
 
 def main():
     if len(sys.argv) != 2 or not sys.argv[1].isdigit():
+        print(sys.argv)
         print("Usage: python3 main.py <images_count>")
         exit(0)
 
@@ -235,9 +237,8 @@ def main():
 
     while not done:
         rospy.sleep(.5)
-        print('Sleeping')
-    get_results()
 
+    get_results()
 
 if __name__ == '__main__':
     main()
