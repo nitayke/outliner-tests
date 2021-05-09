@@ -176,6 +176,7 @@ def delete_images(path):
     for f in files:
         os.remove(f)
 
+
 def main():
     if len(sys.argv) != 2 or not sys.argv[1].isdigit():
         print("Usage: python3 main.py <images_count>")
@@ -195,8 +196,6 @@ def main():
         s_img = cv2.imread(directory + filename)
         s_img = resize_image(s_img)
 
-        print(1)
-
         l_img = np.zeros((IMAGE_SIZE, IMAGE_SIZE, 3), np.uint8)
         l_img.fill(255)
         
@@ -208,7 +207,6 @@ def main():
             if height < IMAGE_SIZE and width < IMAGE_SIZE:
                 break
 
-        print(2)
         x_offset = randint(0, IMAGE_SIZE-width)
         y_offset = randint(0, IMAGE_SIZE-height)
 
@@ -218,7 +216,6 @@ def main():
 
         find_rect(l_img, filename)
 
-        print(3)
         # publish with ROS
         ogrid = get_ogrid(l_img, filename)
         pub.publish(ogrid)
