@@ -8,7 +8,6 @@ from map_roi_aligner_msgs.msg import RectangleStamped
 from geometry_msgs.msg import Pose
 from random import randint
 from math import radians, degrees, cos, sin, pi
-from time import sleep
 import glob
 from yaml import load
 
@@ -27,37 +26,6 @@ MAX_BUILDING_SIZE = parameters['MAX_BUILDING_SIZE']
 
 fields = ['x', 'y', 'width', 'height', 'angle']
 callback_count = 0
-
-
-def callback(data):
-    global ground_truth
-    global callback_count
-    global done
-    
-    filename = data.header.frame_id
-    # until the key exists
-    while True:
-        try:
-            gt = [ground_truth[filename]['x'], ground_truth[filename]['y'], ground_truth[filename]['width'],
-            ground_truth[filename]['height'], ground_truth[filename]['angle']]
-            break
-        except KeyError:
-            print('KeyError', filename)
-            sleep(0.5)
-
-    result = [data.rectangle.centerX, data.rectangle.centerY, data.rectangle.width, data.rectangle.height, data.rectangle.theta]
-
-    if -0.1 < abs(gt[4] - result[4]) - pi/2 < 0.1: # 90 degrees rotated
-        gt[2], gt[3] = gt[3], gt[2]
-        gt[4] -= pi/2
-
-    single_errors = [gt[i] - result[i] for i in range(5)]
-    errors[filename] = [single_errors, result]
-
-    callback_count += 1
-    print('Callback', filename, callback_count)
-    if callback_count >= int(sys.argv[1]):
-        done = True
 
 
 def rotate_image(image, angleInDegrees):
@@ -193,18 +161,52 @@ def delete_images(path):
         os.remove(f)
 
 
+def callback(data):
+    global ground_truth
+    global callback_count
+    global done
+    
+    filename = data.header.frame_id
+
+    print('Recieved', filename)
+    # Until the key exists
+    while True:
+        try:
+            gt = [ground_truth[filename]['x'], ground_truth[filename]['y'], ground_truth[filename]['width'],
+            ground_truth[filename]['height'], ground_truth[filename]['angle']]
+            break
+        except KeyError:
+            print('KeyError', filename)
+            rospy.sleep(.5)
+
+    result = [data.rectangle.centerX, data.rectangle.centerY, data.rectangle.width, data.rectangle.height, data.rectangle.theta]
+
+    if -0.1 < abs(gt[4] - result[4]) - pi/2 < 0.1: # 90 degrees rotated
+        gt[2], gt[3] = gt[3], gt[2]
+        gt[4] -= pi/2
+
+    single_errors = [gt[i] - result[i] for i in range(5)]
+    errors[filename] = [single_errors, result]
+
+    callback_count += 1
+    print('Added', filename)
+    if callback_count >= int(sys.argv[1]):
+        done = True
+
+
 def main():
+    global done
     if len(sys.argv) != 2 or not sys.argv[1].isdigit():
         print("Usage: python3 main.py <images_count>")
-        exit(0)
+        return
 
     rospy.init_node('outliner_test')
 
     delete_images('../compared/*')
     delete_images('../big_errors/*')
 
-    pub = rospy.Publisher('map_handler/out/debug_map', OccupancyGrid, queue_size=100)
-    sub = rospy.Subscriber('map_roi/out/rectangle/center_size_rot', RectangleStamped, callback, queue_size=100)
+    pub = rospy.Publisher('map_handler/out/debug_map', OccupancyGrid, queue_size=10)
+    sub = rospy.Subscriber('map_roi/out/rectangle/center_size_rot', RectangleStamped, callback, queue_size=10)
     rospy.sleep(1.)
 
     directory = "../dataset/"
@@ -238,11 +240,11 @@ def main():
         ogrid = get_ogrid(l_img, filename)
         pub.publish(ogrid)
 
-        print(filename)
+        print('Publishing', filename)
 
     while not done:
-        print("Sleeping")
-        rospy.sleep(.1)
+        print("Waiting...")
+        rospy.sleep(.5)
 
     get_results()
 
