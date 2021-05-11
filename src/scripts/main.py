@@ -43,7 +43,7 @@ def rotate_image(image, angleInDegrees):
     rot[0, 2] += ((b_w / 2) - img_c[0])
     rot[1, 2] += ((b_h / 2) - img_c[1])
 
-    outImg = cv2.warpAffine(image, rot, (b_w, b_h), flags=cv2.INTER_NEAREST, borderValue=(255,255,255)) # / INTER_LINEAR ?
+    outImg = cv2.warpAffine(image, rot, (b_w, b_h), flags=cv2.INTER_LINEAR, borderValue=(255,255,255)) # INTER_LINEAR / INTER_NEAREST
     return outImg
 
 
@@ -127,6 +127,7 @@ def compare_results(filename, foldername):
 
 
 def get_results():
+    global callback_count
     count = 0
     std = np.std([i[0] for i in errors.values()], axis=0).tolist()
     std = [round(i, 3) for i in std]
@@ -152,7 +153,7 @@ def get_results():
     print(fields[4], ':', std[4], '[°]')
 
     print('------ Number of big errors: ---')
-    print(count)
+    print(count, 'of', callback_count)
 
 
 def delete_images(path):
@@ -167,8 +168,8 @@ def callback(data):
     global done
     
     filename = data.header.frame_id
-
     print('Recieved', filename)
+
     # Until the key exists
     while True:
         try:
@@ -180,8 +181,9 @@ def callback(data):
             rospy.sleep(.5)
 
     result = [data.rectangle.centerX, data.rectangle.centerY, data.rectangle.width, data.rectangle.height, data.rectangle.theta]
-
-    if -0.1 < abs(gt[4] - result[4]) - pi/2 < 0.1: # 90 degrees rotated
+    
+    # 90 degrees rotated
+    if -0.1 < abs(gt[4] - result[4]) - pi/2 < 0.1:
         gt[2], gt[3] = gt[3], gt[2]
         gt[4] -= pi/2
 
@@ -205,8 +207,6 @@ def main():
 
     delete_images('../compared/*')
     delete_images('../big_errors/*')
-
-    # TODO: Fix the delay 
 
     pub = rospy.Publisher('map_handler/out/debug_map', OccupancyGrid, queue_size=100)
     sub = rospy.Subscriber('map_roi/out/rectangle/center_size_rot', RectangleStamped, callback, queue_size=100)
@@ -245,10 +245,13 @@ def main():
 
         print('Publishing', filename)
 
-    while not done:
-        print("Waiting...")
-        rospy.sleep(.5)
+    # TODO: Fix the delay
 
+    # while not done:
+    #     print("Waiting...")
+    #     rospy.sleep(.5)
+
+    rospy.spin()
     get_results()
 
 if __name__ == '__main__':
