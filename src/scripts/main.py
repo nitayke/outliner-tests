@@ -190,6 +190,7 @@ def callback(data):
 
     callback_count += 1
     print('Added', filename)
+    print('Count:', callback_count)
     if callback_count >= int(sys.argv[1]):
         done = True
 
@@ -205,8 +206,10 @@ def main():
     delete_images('../compared/*')
     delete_images('../big_errors/*')
 
-    pub = rospy.Publisher('map_handler/out/debug_map', OccupancyGrid, queue_size=10)
-    sub = rospy.Subscriber('map_roi/out/rectangle/center_size_rot', RectangleStamped, callback, queue_size=10)
+    # TODO: Fix the delay 
+
+    pub = rospy.Publisher('map_handler/out/debug_map', OccupancyGrid, queue_size=100)
+    sub = rospy.Subscriber('map_roi/out/rectangle/center_size_rot', RectangleStamped, callback, queue_size=100)
     rospy.sleep(1.)
 
     directory = "../dataset/"
