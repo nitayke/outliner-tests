@@ -1,3 +1,4 @@
+import sys
 import os
 import cv2
 import numpy as np
@@ -7,11 +8,9 @@ from map_roi_aligner_msgs.msg import RectangleStamped
 from geometry_msgs.msg import Pose
 from random import randint
 from math import radians, degrees, cos, sin, pi
-import sys
 from time import sleep
 import glob
 from yaml import load
-
 
 big_images = {}
 ground_truth = {}
@@ -29,8 +28,6 @@ MAX_BUILDING_SIZE = parameters['MAX_BUILDING_SIZE']
 fields = ['x', 'y', 'width', 'height', 'angle']
 callback_count = 0
 
-rospy.init_node('test_img')
-
 
 def callback(data):
     global ground_truth
@@ -38,6 +35,7 @@ def callback(data):
     global done
     
     filename = data.header.frame_id
+    # until the key exists
     while True:
         try:
             gt = [ground_truth[filename]['x'], ground_truth[filename]['y'], ground_truth[filename]['width'],
@@ -197,9 +195,10 @@ def delete_images(path):
 
 def main():
     if len(sys.argv) != 2 or not sys.argv[1].isdigit():
-        print(sys.argv)
         print("Usage: python3 main.py <images_count>")
         exit(0)
+
+    rospy.init_node('outliner_test')
 
     delete_images('../compared/*')
     delete_images('../big_errors/*')
