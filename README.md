@@ -1,8 +1,8 @@
 # outliner-tests
 
 ## Usage
-  ```cd scripts
-  python3 main.py <images count>```
+  `cd scripts
+  python3 main.py <images count>`
   
 ## Configuration
 You can change the parameters in file /scripts/config.yaml
