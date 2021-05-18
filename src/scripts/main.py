@@ -208,6 +208,10 @@ def main():
     delete_images('../compared/*')
     delete_images('../big_errors/*')
 
+    if int(sys.argv[1]) == 0: # Just deleting files
+        print('Cleaned successfully')
+        return
+
     pub = rospy.Publisher('map_handler/out/debug_map', OccupancyGrid, queue_size=100)
     sub = rospy.Subscriber('map_roi/out/rectangle/center_size_rot', RectangleStamped, callback, queue_size=100)
     rospy.sleep(1.)
@@ -242,16 +246,19 @@ def main():
         # publish with ROS
         ogrid = get_ogrid(l_img, filename)
         pub.publish(ogrid)
-
         print('Publishing', filename)
 
+    sleep_count = 0
+
     # TODO: Fix the delay
+    while not done:
+        print("Waiting...")
+        rospy.sleep(.5)
+        sleep_count += 1
+        if sleep_count > 5:
+            break
 
-    # while not done:
-    #     print("Waiting...")
-    #     rospy.sleep(.5)
-
-    rospy.spin()
+    # rospy.spin()
     get_results()
 
 if __name__ == '__main__':
