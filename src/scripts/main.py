@@ -228,7 +228,7 @@ def main():
         
         # rotate
         while True:
-            angle = randint(0, 90)
+            angle = randint(-45, 45)
             rotated = rotate_image(s_img, angle)
             height, width, _ = rotated.shape
             if height < IMAGE_SIZE and width < IMAGE_SIZE:
@@ -260,6 +260,7 @@ def main():
 
     # rospy.spin()
     get_results()
+    
 
 if __name__ == '__main__':
     main()
