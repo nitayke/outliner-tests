@@ -200,7 +200,7 @@ def callback(data):
 def main():
     global done
     if len(sys.argv) != 2 or not sys.argv[1].isdigit():
-        print("Usage: python3 main.py <images_count>")
+        print("Usage: python3 %s <images_count>" % sys.argv[0])
         return
 
     rospy.init_node('outliner_test')
