@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import rospy
 from nav_msgs.msg import OccupancyGrid, MapMetaData
-from map_roi_aligner_msgs.msg import RectangleStamped
+from map_roi_aligner_msgs.srv import MapBuildingOutline
 from geometry_msgs.msg import Pose
 from random import randint
 from math import radians, degrees, cos, sin, pi
@@ -25,7 +25,7 @@ MIN_BUILDING_SIZE = parameters['MIN_BUILDING_SIZE']
 MAX_BUILDING_SIZE = parameters['MAX_BUILDING_SIZE']
 
 fields = ['x', 'y', 'width', 'height', 'angle']
-callback_count = 0
+all_count = 0
 
 
 def rotate_image(image, angleInDegrees):
@@ -126,14 +126,14 @@ def compare_results(filename, foldername):
     cv2.imwrite(foldername + filename, hori)
 
 
-def get_results():
-    global callback_count
+def get_final_results():
+    global all_count
     count = 0
     std = np.std([i[0] for i in errors.values()], axis=0).tolist()
     std = [round(i, 3) for i in std]
 
     for filename, error in errors.items():
-        print(filename)
+        print('Processing', filename)
         for i in range(5):
             if i == 0:
                 compare_results(filename, '../compared/')
@@ -153,7 +153,7 @@ def get_results():
     print(fields[4], ':', std[4], '[°]')
 
     print('------ Number of big errors: ---')
-    print(count, 'of', callback_count)
+    print(count, 'of', all_count)
 
 
 def delete_images(path):
@@ -162,25 +162,28 @@ def delete_images(path):
         os.remove(f)
 
 
-def callback(data):
+def service_client(map):
+    rospy.wait_for_service('map_roi/map_building_outline')
+    try:
+        build_outline = rospy.ServiceProxy('map_roi/map_building_outline', MapBuildingOutline)
+        resp = build_outline(map)
+        return resp
+    except rospy.ServiceException as e:
+        print("Service call failed: %s" % e)
+
+
+def add_result(data, filename):
     global ground_truth
-    global callback_count
-    global done
-    
-    filename = data.header.frame_id
-    print('Recieved', filename)
+    global all_count
 
-    # Until the key exists
-    while True:
-        try:
-            gt = [ground_truth[filename]['x'], ground_truth[filename]['y'], ground_truth[filename]['width'],
-            ground_truth[filename]['height'], ground_truth[filename]['angle']]
-            break
-        except KeyError:
-            print('KeyError', filename)
-            rospy.sleep(.5)
+    all_count += 1
 
-    result = [data.rectangle.centerX, data.rectangle.centerY, data.rectangle.width, data.rectangle.height, data.rectangle.theta]
+    print('Adding:', filename, ', Count:', all_count)
+
+    gt = [ground_truth[filename]['x'], ground_truth[filename]['y'], ground_truth[filename]['width'],
+    ground_truth[filename]['height'], ground_truth[filename]['angle']]
+
+    result = [data.optimizedRect.centerX, data.optimizedRect.centerY, data.optimizedRect.width, data.optimizedRect.height, data.optimizedRect.theta]
     
     # 90 degrees rotated
     if -0.1 < abs(gt[4] - result[4]) - pi/2 < 0.1:
@@ -189,12 +192,6 @@ def callback(data):
 
     single_errors = [gt[i] - result[i] for i in range(5)]
     errors[filename] = [single_errors, result]
-
-    callback_count += 1
-    print('Added', filename)
-    print('Count:', callback_count)
-    if callback_count >= int(sys.argv[1]):
-        done = True
 
 
 def main():
@@ -212,13 +209,11 @@ def main():
         print('Cleaned successfully')
         return
 
-    pub = rospy.Publisher('map_handler/out/debug_map', OccupancyGrid, queue_size=100)
-    sub = rospy.Subscriber('map_roi/out/rectangle/center_size_rot', RectangleStamped, callback, queue_size=100)
     rospy.sleep(1.)
 
     directory = "../dataset/"
 
-    for filename_int in range(int(sys.argv[1]) + 1):
+    for filename_int in range(int(sys.argv[1])):
         filename = str(filename_int % FILES_COUNT + 1) + '.jpg'
         s_img = cv2.imread(directory + filename)
         s_img = resize_image(s_img)
@@ -243,23 +238,12 @@ def main():
 
         find_rect(l_img, filename)
 
-        # publish with ROS
         ogrid = get_ogrid(l_img, filename)
-        pub.publish(ogrid)
-        print('Publishing', filename)
+        result = service_client(ogrid)
+        if result.solutionUsable:
+            add_result(result, filename)
 
-    sleep_count = 0
-
-    # TODO: Fix the delay
-    while not done:
-        print("Waiting...")
-        rospy.sleep(.5)
-        sleep_count += 1
-        if sleep_count > 5:
-            break
-
-    # rospy.spin()
-    get_results()
+    get_final_results()
     
 
 if __name__ == '__main__':
