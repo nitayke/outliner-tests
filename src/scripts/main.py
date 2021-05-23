@@ -28,8 +28,8 @@ fields = ['x', 'y', 'width', 'height', 'angle']
 all_count = 0
 
 
-def get_filename(filename_int):
-    return str(filename_int % FILES_COUNT + 1) + '.jpg'
+def get_filename(iteration):
+    return str(iteration % FILES_COUNT + 1) + '.jpg'
 
 
 def rotate_image(image, angleInDegrees):
@@ -65,7 +65,7 @@ def resize_image(image):
     return cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_NEAREST)
 
 
-def find_rect(image, filename_int):
+def find_rect(image, iteration):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
 
@@ -81,7 +81,7 @@ def find_rect(image, filename_int):
 
     ((x, y), (width, height), angle) = cv2.minAreaRect(cnts[0])
     (x, y, width, height, angle) = (round(x/10, 3), round(y/10, 3), round(width/10, 3), round(height/10, 3), round(angle, 3))
-    ground_truth[filename_int] = {'x': x, 'y': y, 'width': width, 'height': height, 'angle': radians(angle)}
+    ground_truth[iteration] = {'x': x, 'y': y, 'width': width, 'height': height, 'angle': radians(angle)}
 
 
 def get_ogrid(image, filename):
@@ -103,20 +103,20 @@ def get_ogrid(image, filename):
     return ogrid
 
 
-def compare_results(filename_int, foldername):
+def compare_results(iteration, foldername):
     im1 = cv2.imread('../templates/gt.jpg')
     im2 = cv2.imread('../templates/result.jpg')
 
-    transparent1 = big_images[filename_int].copy()
-    transparent2 = big_images[filename_int].copy()
+    transparent1 = big_images[iteration].copy()
+    transparent2 = big_images[iteration].copy()
 
-    gt = list(ground_truth[filename_int].values())
+    gt = list(ground_truth[iteration].values())
 
     box1 = cv2.boxPoints(((gt[0]*10, gt[1]*10), (gt[2]*10, gt[3]*10), degrees(gt[4])))
     box1 = np.int0(box1)
     cv2.drawContours(transparent1,[box1],0,(0x77,0x77,0xff),2)
 
-    error = errors[filename_int]
+    error = errors[iteration]
 
     box2 = cv2.boxPoints(((error[1][0]*10, error[1][1]*10), (error[1][2]*10, error[1][3]*10), degrees(error[1][4])))
     box2 = np.int0(box2)
@@ -127,7 +127,7 @@ def compare_results(filename_int, foldername):
 
     hori = np.concatenate((im1, im2), axis=1)
 
-    cv2.imwrite(foldername + get_filename(filename_int), hori)
+    cv2.imwrite(foldername + get_filename(iteration), hori)
 
 
 def get_final_results():
@@ -136,14 +136,14 @@ def get_final_results():
     std = np.std([i[0] for i in errors.values()], axis=0).tolist()
     std = [round(i, 3) for i in std]
 
-    for filename_int, error in errors.items():
-        print('Processing', filename_int)
+    for iteration, error in errors.items():
+        print('Processing', iteration)
         for i in range(5):
             if i == 0:
-                compare_results(filename_int, '../compared/')
+                compare_results(iteration, '../compared/')
             if abs(error[0][i]) > 2*std[i]:
                 count += 1
-                compare_results(filename_int, '../big_errors/')
+                compare_results(iteration, '../big_errors/')
                 break
 
     print('------ Average error: ----------')
@@ -176,16 +176,16 @@ def service_client(map):
         print("Service call failed: %s" % e)
 
 
-def add_result(data, filename_int):
+def add_result(data, iteration):
     global ground_truth
     global all_count
 
     all_count += 1
 
-    print('Adding', filename_int)
+    print('Adding', iteration)
 
-    gt = [ground_truth[filename_int]['x'], ground_truth[filename_int]['y'], ground_truth[filename_int]['width'],
-    ground_truth[filename_int]['height'], ground_truth[filename_int]['angle']]
+    gt = [ground_truth[iteration]['x'], ground_truth[iteration]['y'], ground_truth[iteration]['width'],
+    ground_truth[iteration]['height'], ground_truth[iteration]['angle']]
 
     result = [data.optimizedRect.centerX, data.optimizedRect.centerY, data.optimizedRect.width, data.optimizedRect.height, data.optimizedRect.theta]
     
@@ -195,7 +195,7 @@ def add_result(data, filename_int):
         gt[4] -= pi/2
 
     single_errors = [gt[i] - result[i] for i in range(5)]
-    errors[filename_int] = [single_errors, result]
+    errors[iteration] = [single_errors, result]
 
 
 def main():
@@ -217,8 +217,8 @@ def main():
 
     directory = "../dataset/"
 
-    for filename_int in range(int(sys.argv[1])):
-        s_img = cv2.imread(directory + get_filename(filename_int))
+    for iteration in range(int(sys.argv[1])):
+        s_img = cv2.imread(directory + get_filename(iteration))
         s_img = resize_image(s_img)
 
         l_img = np.zeros((IMAGE_SIZE, IMAGE_SIZE, 3), np.uint8)
@@ -237,14 +237,14 @@ def main():
 
         # place in constant big image
         l_img[y_offset:y_offset+height, x_offset:x_offset+width] = rotated
-        big_images[filename_int] = l_img
+        big_images[iteration] = l_img
 
-        find_rect(l_img, filename_int)
+        find_rect(l_img, iteration)
 
-        ogrid = get_ogrid(l_img, get_filename(filename_int))
+        ogrid = get_ogrid(l_img, get_filename(iteration))
         result = service_client(ogrid)
         if result.solutionUsable:
-            add_result(result, filename_int)
+            add_result(result, iteration)
 
     get_final_results()
     
